@@ -1,0 +1,60 @@
+name: CI for microservice-1
+
+on:
+  workflow_dispatch:
+  push:
+   branches:
+      - main
+   paths:
+       - 'app/microservice-1/**'
+       
+permissions: 
+  contents: write  # Allow GITHUB_TOKEN to push changes
+  
+jobs:
+  build-push-ms1:
+    runs-on: ubuntu-latest
+
+    steps:
+      # Step 1: Checkout code
+      - name: Checkout code
+        uses: actions/checkout@v2
+        
+      # Step 2: Set up Docker Buildx for multi-platform builds (if needed)
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v1
+        
+      # Step 3: Install Azure CLI
+      - name: Install Azure CLI
+        run: |
+          curl -sL https://aka.ms/InstallAzureCLIDeb | sudo bash
+
+      # Step 4: Login to Azure using Service Principal
+      - name: Login to Azure using Service Principal
+        run: az login --service-principal -u ${{ secrets.AZURE_CLIENT_ID }} -p ${{ secrets.AZURE_CLIENT_SECRET }} --tenant ${{ secrets.AZURE_TENANT_ID }}
+
+      # Step 5: Login to Azure Container Registry (ACR)
+      - name: Login to Azure Container Registry
+        run: az acr login --name homegloberegistry.azurecr.io
+
+      # Step 6: Get short Git commit SHA
+      - name: Get short Git commit SHA
+        id: vars
+        run: echo "::set-output name=commit_sha::$(git rev-parse --short HEAD)"
+      
+      # Step 7: Build the Microservice with Gradle Wrapper
+      - name: Build the Microservice with Gradle Wrapper
+        working-directory: ./app/microservice-1
+        run: ./gradlew build
+
+      # Step 8: Download the Java 17 docker image locally first
+      - name: Download the Java 17 docker image locally
+        run: docker pull openjdk:17.0.2-slim-buster
+
+      # Step 9: Build and push Docker image for Microservice 1 to Azure ACR
+      # Now using the Dockerfile to include the built JAR file
+      - name: Build and push Docker image to Azure ACR
+        working-directory: ./app/microservice-1
+        run: |
+          docker build -t homegloberegistry.azurecr.io/microservice-1:${{ steps.vars.outputs.commit_sha }} .
+          docker push homegloberegistry.azurecr.io/microservice-1:${{ steps.vars.outputs.commit_sha }}
