@@ -51,8 +51,12 @@ jobs:
       
       # Step 7: Build the Microservice with Gradle Wrapper
       - name: Build the Microservice with Gradle Wrapper
-        working-directory: ./app/microservice-1
-        run: ./gradlew build
+        run:  |
+          cd app/microservice-1
+          ./gradlew build
+
+      - name: Verify JAR file exists
+        run: ls -l app/microservice-1/build/libs
 
       # Step 8: Download the Java 17 docker image locally first
       - name: Download the Java 17 docker image locally
@@ -61,7 +65,7 @@ jobs:
       # Step 9: Build and push Docker image for Microservice 1 to Azure ACR
       # Now using the Dockerfile to include the built JAR file
       - name: Build and push Docker image to Azure ACR
-        working-directory: ./app/microservice-1
         run: |
+          cd app/microservice-1
           docker build -t homegloberegistry.azurecr.io/microservice-1:${{ steps.vars.outputs.commit_sha }} .
           docker push homegloberegistry.azurecr.io/microservice-1:${{ steps.vars.outputs.commit_sha }}
