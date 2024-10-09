@@ -32,10 +32,7 @@ jobs:
       # Step 4: Login to Azure using Service Principal
       - name: Login to Azure using Service Principal
         run: |
-          az login --service-principal \
-            -u '${{ secrets.AZURE_CLIENT_ID }}' \
-            -p '${{ secrets.AZURE_CLIENT_SECRET }}' \
-            --tenant '${{ secrets.AZURE_TENANT_ID' }}
+          az login --service-principal -u ${{ secrets.AZURE_CLIENT_ID }} -p=${{ secrets.AZURE_CLIENT_SECRET }} --tenant ${{ secrets.AZURE_TENANT_ID }}
 
       # Step 5: Login to Azure Container Registry (ACR)
       - name: Login to Azure Container Registry
