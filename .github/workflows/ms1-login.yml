@@ -39,12 +39,15 @@ jobs:
         with:
           java-version: '17'
           distribution: 'temurin'
+
+      - name: Check Java environment
+        run: echo $JAVA_HOME
       
       # Step 6: Build the Microservice with Gradle Wrapper
       - name: Build the Microservice with Gradle Wrapper
         run:  |
           cd app/microservice-1
-          ./gradlew build
+          ./gradlew build --no-daemon
 
       # Step 7: Verify JAR file exists
       - name: Verify JAR file exists
